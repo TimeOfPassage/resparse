@@ -1,0 +1,10 @@
+# 二进制
+/resparse
+/bin/
+
+# 环境与日志
+.env
+*.log
+
+# 编辑器 / 系统
+.DS_Store

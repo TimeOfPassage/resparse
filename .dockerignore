@@ -1,0 +1,8 @@
+.git
+.env
+*.log
+/bin
+/resparse
+.DS_Store
+Dockerfile
+docker-compose.yaml

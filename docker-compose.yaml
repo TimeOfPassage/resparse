@@ -1,0 +1,17 @@
+services:
+  metaparse:
+    build:
+      context: .
+      args:
+        GO_IMAGE: ${GO_IMAGE:-golang:1.22-alpine}
+        RUNTIME_IMAGE: ${RUNTIME_IMAGE:-alpine:3.20}
+    image: metaparse:local
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      PORT: "3000"
+      HOST: "0.0.0.0"
+      FFPROBE_PATH: "ffprobe"
+    restart: unless-stopped
