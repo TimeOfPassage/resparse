@@ -1,11 +1,6 @@
 services:
   metaparse:
-    build:
-      context: .
-      args:
-        # 基础镜像可覆盖（默认官方；国内网络可换成加速源，例如 docker.m.daocloud.io/library/...）
-        GO_IMAGE: ${GO_IMAGE:-golang:1.22-alpine}
-        RUNTIME_IMAGE: ${RUNTIME_IMAGE:-alpine:3.20}
+    build: .
     image: metaparse:local
     ports:
       - "3000:3000"
