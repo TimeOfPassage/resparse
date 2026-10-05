@@ -3,15 +3,16 @@ services:
     build:
       context: .
       args:
+        # 基础镜像可覆盖（默认官方；国内网络可换成加速源，例如 docker.m.daocloud.io/library/...）
         GO_IMAGE: ${GO_IMAGE:-golang:1.22-alpine}
         RUNTIME_IMAGE: ${RUNTIME_IMAGE:-alpine:3.20}
     image: metaparse:local
     ports:
       - "3000:3000"
+    # .env 为可选：缺失时服务仍可启动，/api/health 显示 degraded（R2 未配置）
     env_file:
-      - .env
-    environment:
-      PORT: "3000"
-      HOST: "0.0.0.0"
-      FFPROBE_PATH: "ffprobe"
+      - path: .env
+        required: false
+    # PORT / HOST / FFPROBE_PATH 的默认值由 Dockerfile 的 ENV 提供，
+    # 如需覆盖，请在 .env 中设置（此处不再硬编码，避免静默覆盖 .env）。
     restart: unless-stopped

@@ -1,0 +1,50 @@
+# 从 Docker Hub（docker.io）拉取已构建好的镜像运行；不在本地构建。
+# 环境变量通过 environment 显式注入，不使用 env_file（不把 .env 整包注入容器）。
+#
+# 取值来源：shell 环境变量（compose 插值）。若同目录存在 .env，compose 也会用它做插值，
+# 想完全避开可到其它目录用 -f 指向本文件运行。
+#
+# 用法示例：
+#   # 1) 先把镜像推送到 Docker Hub（本仓库带 Dockerfile）：
+#   docker build -t <用户名>/resparse:latest .
+#   docker push <用户名>/resparse:latest
+#
+#   # 2) 拉取并运行（环境变量从 shell 传入）：
+#   IMAGE=docker.io/<用户名>/resparse:latest \
+#   R2_ACCOUNT_ID=... R2_ACCESS_KEY_ID=... R2_SECRET_ACCESS_KEY=... R2_BUCKET=... \
+#   docker compose -f docker-compose.pull.yaml up -d
+
+services:
+  metaparse:
+    # 从 docker.io 拉取；请替换为你推送的镜像地址
+    image: ${IMAGE:-docker.io/1376246506/resparse:1}
+    # 每次 up 都尝试拉取最新镜像（确保来自 docker.io，而非本地缓存）
+    pull_policy: always
+    ports:
+      - "${HOST_PORT:-3000}:3000"
+    environment:
+      # ---- Cloudflare R2（必填；留空时服务以 degraded 启动，解析接口返回 config_missing）----
+      R2_ACCOUNT_ID: ${R2_ACCOUNT_ID:-}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
+      R2_BUCKET: ${R2_BUCKET:-}
+      R2_ENDPOINT: ${R2_ENDPOINT:-}
+      R2_REGION: ${R2_REGION:-auto}
+      # ---- 服务 ----
+      API_KEY: ${API_KEY:-}
+      PORT: "5000"
+      HOST: "0.0.0.0"
+      # ---- ffprobe / 限制 / 日志 ----
+      FFPROBE_PATH: ${FFPROBE_PATH:-ffprobe}
+      PROBE_TIMEOUT_MS: ${PROBE_TIMEOUT_MS:-30000}
+      MAX_FILE_BYTES: ${MAX_FILE_BYTES:-2147483648}
+      TEMP_DIR_PREFIX: ${TEMP_DIR_PREFIX:-metaparse-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    # 显式声明健康检查（镜像 Dockerfile 已自带，这里覆盖以保持文件自解释）
+    healthcheck:
+      test: ["CMD", "/app/resparse", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    restart: unless-stopped
